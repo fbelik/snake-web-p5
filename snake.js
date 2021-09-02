@@ -2,7 +2,15 @@ function setup() {
   // put setup code here
   createCanvas(500,500);
   frameRate(15);
+  var slider = document.getElementById("speed");
+  slider.value = 15;
+  // Update the current slider value (each time you drag the slider handle)
+  slider.oninput = function() {
+    frameRate(parseInt(this.value / 2));
+  }
 }
+
+
 
 var speed = 25;
 
@@ -23,6 +31,8 @@ var candy = {
 };
 
 var bodies = [];
+
+var changedDir = false;
 
 function draw() {
   // put drawing code
@@ -53,23 +63,6 @@ function draw() {
   head.x += head.xvel;
   head.y += head.yvel;
 
-/*
-
-  if (head.x >= 500) {
-    head.x = 0;
-  }
-  if (head.x < 0) {
-    head.x = 500 - speed;
-  }
-  if (head.y >= 500) {
-    head.y = 0;
-  }
-  if (head.y < 0) {
-    head.y = 500 - speed;
-  }
-
-*/
-
   if (loseCondition()) {
     head.x = 0;
     head.y = 0;
@@ -78,6 +71,7 @@ function draw() {
     bodies = [];
   }
   rect(head.x, head.y, speed, speed);
+  changedDir = false;
   if (hitCandy()) {
     addBody(prevLast);
     newLocation = newCandy();
@@ -114,20 +108,36 @@ function hitCandy() {
 }
 
 function newCandy() {
-  if ((score+1) == 50) { // CHANGE
+  if ((score+1) == 199) { // Win condition
     return 'win'
   }
   already = [[head.x,head.y]];
   for (var i = 0; i < bodies.length; i++) {
     already.push([bodies[i].x, bodies[i].y]);
   }
-  var x = Math.floor(Math.random() * (500/speed)) * speed;
-  var y = Math.floor(Math.random() * (500/speed)) * speed;
-  while (includesArray(already,[x,y])) {
-    x = Math.floor(Math.random() * (500/speed)) * speed;
-    y = Math.floor(Math.random() * (500/speed)) * speed;
+  var remaining = 200 - score - 1
+  var spot = Math.floor(Math.random() * remaining);
+  var x = 0
+  var y = 0
+  var ct = 0
+  while (ct < spot) {
+      x += speed
+      if (x == 500) {
+          y += speed
+          x = 0
+      }
+      var inAlready = false;
+      for (var i=0; i<already.length; i++) {
+          if (x == already[i][0] && y == already[i][1]) {
+              inAlready = true
+              break
+          }
+      }
+      if (!inAlready) {
+          ct++
+      }
   }
-  return [x,y];
+  return [x,y]
 }
 
 function includesArray(original,looking) {
@@ -156,24 +166,28 @@ function loseCondition() {
 
 function keyPressed() {
   if (keyCode === LEFT_ARROW || keyCode === 65) {
-    if (head.xvel != speed) {
+    if (head.xvel != speed && !changedDir) {
       head.xvel = -1*speed;
       head.yvel = 0;
+      changedDir = true;
     }
   } else if (keyCode === RIGHT_ARROW || keyCode === 68) {
-    if (head.xvel != -1*speed) {
+    if (head.xvel != -1*speed && !changedDir) {
       head.xvel = speed;
       head.yvel = 0;
+      changedDir = true;
     }
   } else if (keyCode === UP_ARROW || keyCode === 87) {
-    if (head.yvel != speed) {
+    if (head.yvel != speed && !changedDir) {
       head.xvel = 0;
       head.yvel = -1*speed;
+      changedDir = true;
     }
   } else if (keyCode === DOWN_ARROW || keyCode === 83) {
-    if (head.yvel != -1*speed) {
+    if (head.yvel != -1*speed && !changedDir) {
       head.xvel = 0;
       head.yvel = speed;
+      changedDir = true;
     }
   }
 }
